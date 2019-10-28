@@ -33,6 +33,12 @@ class RSA {
             len = i;
         }
 
+        RSA abs(const RSA &rhs) const {
+            RSA res = rhs;
+            res.flag = false;
+            return res;
+        }
+
         RSA operator * (const RSA &rhs) const {
             RSA res;
             res.flag = this->flag ^ rhs.flag;
@@ -53,13 +59,16 @@ class RSA {
 
         RSA operator - (const RSA &rhs) const {
             RSA res;
-            if (this->flag ^ rhs.flag) {
+            if (!this->flag && rhs.flag) {
                 res = *this;
-                return res += rhs;
-            } else if (this->flag == true) {
-                res = rhs;
-                res.flag == false;
-                return res - *this;
+                return res += abs(rhs);
+            } else if (this->flag && rhs.flag) {
+                return abs(rhs) - abs(*this);
+            } else if (this->flag && !rhs.flag) {
+                res = abs(*this);
+                res += rhs;
+                res.flag = true;
+                return res;
             }
             const RSA *a = this, *b = &rhs;
             if (rhs <= *this) 
@@ -104,6 +113,17 @@ class RSA {
 
         RSA operator += (const RSA &rhs) {
             RSA res;
+            if (!this->flag && rhs.flag) {
+                res = *this;
+                return res -= abs(rhs);
+            } else if (this->flag && rhs.flag) {
+                res = abs(*this);
+                res += abs(rhs);
+                res.flag = true; 
+                return res;
+            } else if (this->flag && !rhs.flag) {
+                return rhs - abs(*this);
+            }
             res.flag = this->flag;
             res.len = (this->len > rhs.len) ? this->len : rhs.len;
             for (int i = 0; i < res.len; i++) {
@@ -222,6 +242,11 @@ class RSA {
         }
 
         bool operator < (const RSA &rhs) const {
+            if (this->flag && !rhs.flag)
+                return true;
+            else if (!this->flag && rhs.flag)
+                return false;
+            
             if (this->len < rhs.len)
                 return true;
             else if (this->len > rhs.len)
@@ -241,7 +266,9 @@ class RSA {
         }
 
         bool operator == (const RSA &rhs) const {
-            if (this->len != rhs.len)
+            if (this->flag != rhs.flag)
+                return false;
+            else if (this->len != rhs.len)
                 return false;
             else {
                 for (int i = 0; i < this->len; i++)
@@ -272,7 +299,7 @@ class RSA {
 
         void write(const RSA &n, int num) {
             ofstream File;
-            ull tmp = 0;
+            ull tmp[2] = {0};
             ull temp[2] = {0};
             if (num == 0)
                 File.open("public.txt", ios::out);
@@ -280,17 +307,23 @@ class RSA {
                 File.open("private.txt", ios::out);
             //assert(this->len <= 2);
             
-            for (int i = 1; i >= 0; i--) {
-                tmp << 32;
-                tmp += this->value[i];
-            }
-            
             for (int i = 3; i >= 0; i--) {
-                temp[i / 2] << 32;
+                temp[i / 2] <<= 32;
                 temp[i / 2] += n.value[i];
             }
-            File.write((char *)&tmp, sizeof(ull));
+
+            for (int i = this->len - 1; i >= 0; i--) {
+                tmp[i / 2] <<= 32;
+                //cout << tmp[i / 2] << endl;
+                tmp[i / 2] += this->value[i];
+                //cout << tmp[i / 2] << endl;
+            }
+
             File.write((char *)&temp, sizeof(ull) * 2);
+            if (this->len > 2)
+                File.write((char *)&tmp, sizeof(ull) * 2);
+            else
+                File.write((char *)&tmp, sizeof(ull));
             File.close();
         }
 
@@ -307,4 +340,8 @@ std::ostream& operator << (std::ostream &os, const RSA &r) {
         return os;
     }
 
+bool MillerRabin(ull n);
+void RandomPrime(ull &p, ull &q, ull e);
+void euclid(const RSA &phi, const RSA &e, RSA &d, RSA &y);
+void RSAGenerate();
 #endif

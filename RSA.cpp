@@ -20,7 +20,7 @@ bool MillerRabin(ull n) {
         //cout << "The " << i << " round" << endl;
         ull a = (distr(eng) % (n - 1)) + 1;
 
-        cout << a << endl;
+        //cout << a << endl;
         //cout << "M: " << M << " " << "N: " << N << " " << endl;
         RSA b = RSA::Pow(RSA(a), M, N);
         //cout << "b: " << b << endl;
@@ -62,7 +62,7 @@ void RandomPrime(ull &p, ull &q, ull e) {
     } while (MillerRabin(x) == false || x == p || x % e == 0);
     q = x;
     cout << "p: " << p << ",q: " << q << endl;
-    cout << time << endl;
+    //cout << time << endl;
 }
 
 void euclid(const RSA &phi, const RSA &e, RSA &d, RSA &y) {
@@ -94,7 +94,7 @@ void RSAGenerate() {
     }
     cout << "d: " << d << endl;
     RSA E = RSA(e);
-    RSA c = RSA::Pow(RSA(19990417), E, n);
+    RSA c = RSA::Pow(RSA(88888222), E, n);
     RSA m = RSA::Pow(c, d, n);
     cout << "c: " << c << ", m: " << m << endl;
     E.write(n, 0);
@@ -106,14 +106,18 @@ int main() {
     RSAGenerate();
     ifstream in("public.txt", ios::in);
     ull pub, n[2];
-    in.read((char *)&pub, sizeof(pub));
     in.read((char *)&n, sizeof(n));
+    in.read((char *)&pub, sizeof(pub));
     in.close();
     cout << "pub:" << pub << ",n: " << n[1] << " " << n[0] << endl;
     ifstream in1("private.txt", ios::in);
-    ull priv, n1[2];
-    in1.read((char *)&priv, sizeof(priv));
+    ull priv[2], n1[2];
     in1.read((char *)&n1, sizeof(n1));
+    in1.read((char *)&priv, sizeof(priv));
     in1.close();
-    cout << "priv:" << priv << ",n: " << n1[1] << " " << n1[0] << endl;
+    if (priv[1] == 0)
+        cout << "priv:" << priv;
+    else
+        cout << "priv: " << priv[1] << " " << priv[0];
+    cout << ",n: " << n1[1] << " " << n1[0] << endl;
 }

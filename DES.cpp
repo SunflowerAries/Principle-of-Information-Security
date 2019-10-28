@@ -8,6 +8,7 @@
 #include<memory.h>
 #include<stdlib.h>
 #include<time.h>
+#include"RSA.h"
 using namespace std;
 #define ENCRYPT 0
 #define DECRYPT 1
@@ -307,50 +308,4 @@ int main() {
     }
 	in.close();
 	out.close();
-	/*while(in.read((char *)&plain, sizeof(plain))) {
-		cout << sizeof(plain) << endl;
-		cout << plain << " " << "plain[0]: " << plain[0] << " " << "plain[7]: " << plain[7] << endl;
-		memset(outputtext, 0, 9);
-		//char2Bit(input.c_str(), plain);
-		crypt(plain, cipher, num);
-		bit2Char(cipher, outputtext);
-		//cout << outputtext;
-
-		out.write((char *)&outputtext, sizeof(char) * 8);
-		plain.reset();
-	}
-	in.close();
-	out.close();*/
 }
-
-/*int main() {
-	string s = "romantic";
-	string k = "12345678";
-	string output = "";
-	string tmp = "";
-	char tmptext[9], outputtext[9];
-	bitset<64> plain, cipher, newplain;
-	memset(tmptext, 0, 9);
-	memset(outputtext, 0, 9);
-
-	char2Bit(s.c_str(), plain);
-	//bit2Char(plain, tmptext);
-	//cout << "tmptext: " << tmptext << endl;
-	//tmp += tmptext;
-	//cout << "Hello before reverse\n";
-	//cout << "reverse " << tmp << "\n";
-	//cout << "Hello after reverse\n";
-	char2Bit(k.c_str(), Key);
-	//cout << "Hello after Key\n";
-	generateKey();
-	//cout << "Hello after generate\n";
-	crypt(plain, cipher, ENCRYPT);
-	//cout << "Hello after encrypt\n";
-	//bit2Char(cipher, tmptext);
-	//cout << "cipher: " << tmp << "\n";
-	crypt(cipher, newplain, DECRYPT);
-	bit2Char(newplain, outputtext);
-	cout << "newplain: " << outputtext << "\n";
-	//assert(plain == newplain);
-	return 0;
-}*/
