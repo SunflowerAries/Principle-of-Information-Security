@@ -17,27 +17,19 @@ bool MillerRabin(ull n) {
     RSA N_1 = RSA(n - 1);
     int tmpk = k;
     for (int i = 0; i < 50; i++) {
-        //cout << "The " << i << " round" << endl;
         ull a = (distr(eng) % (n - 1)) + 1;
-
-        //cout << a << endl;
-        //cout << "M: " << M << " " << "N: " << N << " " << endl;
         RSA b = RSA::Pow(RSA(a), M, N);
-        //cout << "b: " << b << endl;
         if (b == One)
             continue;
-        for (; tmpk > 0; tmpk--) {
+        for (; tmpk > 0; tmpk--)
             if (b == N_1)
                 break;
             else
                 b = RSA::Pow(b, RSA((ull)2), N);
-            //cout << "b: " << b << " " << "tmpk: " << tmpk << endl;
-        }
         if (tmpk == 0)
             return false;
         tmpk = k;
     }
-    //cout << "Finish function.\n";
     return true;
 }
 
@@ -46,22 +38,20 @@ void RandomPrime(ull &p, ull &q, ull e) {
     mt19937_64 eng(rd());
     uniform_int_distribution<unsigned long long> distr;
     ull x;
-    int time = 0;
+    //int time = 0;
     do {
-        time++;
+        //time++;
         x = distr(eng);
         x = x | 1;
-        //cout << x << endl;
     } while (MillerRabin(x) == false || x % e == 0);
     p = x;
     do {
-        time++;
+        //time++;
         x = distr(eng);
         x = x | 1;
-        //cout << x << endl;
     } while (MillerRabin(x) == false || x == p || x % e == 0);
     q = x;
-    cout << "p: " << p << ",q: " << q << endl;
+    //cout << "p: " << p << ",q: " << q << endl;
     //cout << time << endl;
 }
 
@@ -81,43 +71,46 @@ void RSAGenerate() {
     ull e = 65537;
     ull p, q;
     RandomPrime(p, q, e);
-    //p = 97, q = 37;
     RSA n = RSA(p) * RSA(q);
-    cout << "n: " << n << endl;
+    //cout << "n: " << n << endl;
     RSA phi = RSA(p - 1) * RSA(q - 1);
-    cout << "phi: " << phi << endl;
+    //cout << "phi: " << phi << endl;
     RSA d, y;
     euclid(phi, RSA(e), d, y);
     if (d.flag == true) {
         d.flag = false;
         d = phi - d;
     }
-    cout << "d: " << d << endl;
+    //cout << "d: " << d << endl;
     RSA E = RSA(e);
-    RSA c = RSA::Pow(RSA(88888222), E, n);
-    RSA m = RSA::Pow(c, d, n);
-    cout << "c: " << c << ", m: " << m << endl;
-    E.write(n, 0);
-    d.write(n, 1);
+    E.write("public.txt", n);
+    d.write("private.txt", n);
 }
 
-int main() {
-    cout << "Welcome to the RSA system.\n";
-    RSAGenerate();
-    ifstream in("public.txt", ios::in);
-    ull pub, n[2];
-    in.read((char *)&n, sizeof(n));
-    in.read((char *)&pub, sizeof(pub));
-    in.close();
-    cout << "pub:" << pub << ",n: " << n[1] << " " << n[0] << endl;
-    ifstream in1("private.txt", ios::in);
-    ull priv[2], n1[2];
-    in1.read((char *)&n1, sizeof(n1));
-    in1.read((char *)&priv, sizeof(priv));
-    in1.close();
-    if (priv[1] == 0)
-        cout << "priv:" << priv;
+void read(const char *url, RSA *P, RSA *N) {
+    ull k[2], n[2];
+    ifstream File(url, ios::in);
+    File.seekg(0, File.end);
+    int sum = File.tellg();
+    File.seekg(0, File.beg);
+    File.read((char*)&n, sizeof(n));
+    if (sum == 32)
+        File.read((char*)&k, sizeof(k));
     else
-        cout << "priv: " << priv[1] << " " << priv[0];
-    cout << ",n: " << n1[1] << " " << n1[0] << endl;
+        File.read((char*)&k, sizeof(ull));
+    *P = RSA::toRSA(k);
+    *N = RSA::toRSA(n);
+}
+
+void read(const char *url, RSA *P) {
+    ull k[2];
+    ifstream File(url, ios::in);
+    File.seekg(0, File.end);
+    int sum = File.tellg();
+    File.seekg(0, File.beg);
+    if (sum == 16)
+        File.read((char*)&k, sizeof(k));
+    else
+        File.read((char*)&k, sizeof(ull));
+    *P = RSA::toRSA(k);
 }

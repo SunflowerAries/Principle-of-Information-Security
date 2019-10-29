@@ -96,7 +96,7 @@ class RSA {
                 }
             }
             res.len = a->len;
-            //std::cout << "In subsection res: " << res << " " << res.len << ".\n";
+            //std::cout << "In subsection res: " << res << ".\n";
             while (res.len > 0)
                 if (res.value[res.len - 1] == 0)
                     res.len--;
@@ -172,48 +172,27 @@ class RSA {
             if ((*this) < rhs)
                 return RSA(0);
             RSA tmp = (*this);
-            //cout << tmp.value[1] << " " << tmp.value[0] << endl;
             while (rhs <= tmp) {
                 //cout << "tmp: " << tmp << " " << ", rhs: " << rhs << endl;
-                //cout << "tmp: " << tmp.value[tmp.len - 1] << ", rhs: " << rhs.value[rhs.len - 1] << endl;
                 if (tmp.value[tmp.len - 1] >= rhs.value[rhs.len - 1]) {
                     RSA Rqt = RSA(tmp.value[tmp.len - 1] / rhs.value[rhs.len - 1]);
                     //cout << tmp.len - rhs.len << " " << tmp.value[tmp.len - 1] / rhs.value[rhs.len - 1] << endl;
                     RSA temp;
                     RSA shift = RSA((ull)1) << ((tmp.len - rhs.len) * 32);
+                    //cout << "shift: " << shift << endl;
                     do {
                         if (!(temp == RSA(0)))
                             Rqt -= RSA(1);
-                        //cout << "shift: " << shift << endl;
-                        //cout << "lRqt: " << Rqt * shift << endl;
                         RSA lRqt = Rqt * rhs;
-                        /*cout << "lRqt: ";
-                        for (int i = lRqt.len - 1; i >= 0; i--)
-                            cout << lRqt.value[i] << " ";
-                        cout << endl;*/
+                        //cout << "lRqt: " << lRqt << endl;
                         temp = lRqt * shift;
                         //cout << "tmp: " << tmp << endl;
                         //cout << "temp: " << temp << endl;
-                        /*cout << "tmp: ";
-                        for (int i = tmp.len - 1; i >= 0; i--)
-                            cout << tmp.value[i] << " ";
-                        cout << endl;
-                        cout << "temp: ";
-                        for (int i = temp.len - 1; i >= 0; i--)
-                            cout << temp.value[i] << " ";
-                        cout << endl;*/
                         if (tmp.len < temp.len) {
-                            //cout << temp.value[temp.len - 1] << " " << temp.value[temp.len - 2] << endl;
                             temp.value[temp.len - 2] += (((ull)1 << 32) * temp.value[temp.len - 1]);
-                            //cout << temp.value[temp.len - 2] << endl;
                             temp.value[temp.len - 1] = 0;
                             temp.len--;
                         }
-                        //cout << "temp: ";
-                        //cout << temp << endl;
-                        /*for (int i = temp.len - 1; i >= 0; i--)
-                            cout << temp.value[i] << " ";
-                        cout << endl;*/
                         //cout << "temp: " << temp << endl;
                     } while (tmp < temp);
                     //cout << temp << endl;
@@ -293,35 +272,55 @@ class RSA {
                     //cout << "b: " << b << ", b^2: " << b*b << ", mod: " << (b * b) % mod << endl;
                 }
             }
-            //std::cout << "ans: " << ans << " " << "b: " << b << ".\n";
+            //std::cout << "ans: " << ans << ".\n";
             return ans;
         }
+        
+        static RSA toRSA(ull *n) {
+            RSA res = RSA(n[1]) << 64;
+            res += RSA(n[0]);
+            return res;
+        }
 
-        void write(const RSA &n, int num) {
-            ofstream File;
+        static ull toull(RSA n) {
+            ull tmp;
+            assert(n.len <= 2);
+            for (int i = n.len - 1; i >= 0; i--) {
+                tmp <<= 32;
+                tmp += n.value[i];
+            }
+            return tmp;
+        }
+
+        void write(const char *url) {
+            ofstream File(url, ios::out);
+            ull tmp[2] = {0};
+            for (int i = this->len - 1; i >= 0; i--) {
+                tmp[i / 2] <<= 32;
+                tmp[i / 2] += this->value[i];
+            }
+            if (tmp[1] != 0)
+                File.write((char *)&tmp, sizeof(tmp));
+            else
+                File.write((char *)&tmp, sizeof(ull));
+            File.close();
+        }
+
+        void write(const char *url, const RSA &n) {
+            ofstream File(url, ios::out);
             ull tmp[2] = {0};
             ull temp[2] = {0};
-            if (num == 0)
-                File.open("public.txt", ios::out);
-            else
-                File.open("private.txt", ios::out);
-            //assert(this->len <= 2);
-            
             for (int i = 3; i >= 0; i--) {
                 temp[i / 2] <<= 32;
                 temp[i / 2] += n.value[i];
             }
-
             for (int i = this->len - 1; i >= 0; i--) {
                 tmp[i / 2] <<= 32;
-                //cout << tmp[i / 2] << endl;
                 tmp[i / 2] += this->value[i];
-                //cout << tmp[i / 2] << endl;
             }
-
-            File.write((char *)&temp, sizeof(ull) * 2);
-            if (this->len > 2)
-                File.write((char *)&tmp, sizeof(ull) * 2);
+            File.write((char *)&temp, sizeof(temp));
+            if (tmp[1] != 0)
+                File.write((char *)&tmp, sizeof(tmp));
             else
                 File.write((char *)&tmp, sizeof(ull));
             File.close();
@@ -330,7 +329,7 @@ class RSA {
         friend std::ostream& operator << (std::ostream &os, const RSA &r);
 };
 
-std::ostream& operator << (std::ostream &os, const RSA &r) {
+inline ostream& operator << (std::ostream &os, const RSA &r) {
         int i;
         if (r.flag == true)
             os << "-";
@@ -344,4 +343,6 @@ bool MillerRabin(ull n);
 void RandomPrime(ull &p, ull &q, ull e);
 void euclid(const RSA &phi, const RSA &e, RSA &d, RSA &y);
 void RSAGenerate();
+void read(const char *url, RSA *P);
+void read(const char *url, RSA *P, RSA *N);
 #endif

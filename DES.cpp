@@ -154,12 +154,6 @@ void KeyGenerate() {
 	}
 }
 
-void char2Bit(const char* s, bitset<64>& bits) {
-	for(int i = 0; i < 8; i++)
-		for (int j = 0; j < 8; j++)
-			bits[8*i+j] = ((s[i] >> j) & 1);
-}
-
 void bit2Char(const bitset<64>& bits, char* s) {
 	for(int i = 0; i < 8; i++)
 		for(int j = 0; j < 8; j++)
@@ -199,55 +193,62 @@ void crypt(bitset<64>& input, bitset<64>& output, bool flag) {
 		output[i] = tmp[IP_1[i]];
 }
 
-long long getrand() {
-    long long R;
-    for(int i = 0; i < 4; i++) {
-        R = R << 16;
-        R += (long long)rand();
-    }
-    return R;
-}
-
 int main() {
 	int num, choice;
-	string k;
+	ifstream in;
 	ofstream out;
-	string filename;
 
 	cout << "Welcome to the DES-cryption system!\n";
-	cout << "Input 0 indicates encryption, while 1 means decryption.\n";
+	cout << "Input: 0 indicates encryption, while 1 means decryption.\n";
 	cin >> num;
-	cout << "Input 0 indicates input the Keys while 1 means reading from the given file.\n";
-	cin >> choice;
-	if (choice == 0) {
-		cout << "Input the Keys.\n";
-		cin >> k;
-		char2Bit(k.c_str(), Key);
+	if (num == 0) {
+		cout << "Input the keys.\n";
+		cin >> Key;
+		cout << "Input: 0 indicates directly encrypting with keys while 1 means working with public keys through RSA.\n";
+		cin >> choice;
+		if (choice == 1) {
+			RSAGenerate();
+			RSA P, N;
+			read("public.txt", &P, &N);
+			RSA pub = RSA::Pow(RSA(Key.to_ullong()), P, N);
+			pub.write("Key.txt");
+		}
 	} else {
-		cout << "Input the URL to read keys";
-		string url;
-		cin >> url;
-		ifstream RSA(url, ios::binary);
-		RSA.read((char*)&Key, sizeof(char)*8);
+		cout << "Input 0 indicates directly decrypting with keys while 1 means working with private keys through RSA.\n";
+		cin >> choice;
+		if (choice == 0) {
+			cout << "Input the keys.\n";
+			cin >> Key;
+		}
+		else {
+			RSA N, P, W;
+			read("private.txt", &P, &N);
+			read("Key.txt", &W);
+			RSA priv = RSA::Pow(W, P, N);
+			Key = RSA::toull(priv);
+		}
 	}
 	KeyGenerate();
-	cout << "Which file?\n";
-	cin >> filename;
-	ifstream in(filename, ios::binary);
-	if(num == 0)
+	if(num == 0) {
+		in.open("plain.txt", ios::binary);
 		out.open("cipher.txt", ios::binary);
-	else
+	}
+	else {
+		in.open("cipher.txt", ios::binary);
 		out.open("reverse.txt", ios::binary);
+	}
 
 	char outputtext[9];
 	bitset<64> plain;
 	bitset<8> tmp;
 	int count = 0;
     int fill = 0;
-    srand((unsigned)time(NULL));
-    bitset<64> cipher(getrand());
+	random_device rd;
+    mt19937_64 eng(rd());
+    uniform_int_distribution<unsigned long long> distr;
+    bitset<64> cipher(distr(eng));
     bitset<64> IV = cipher;
-    bitset<64> tofill(getrand());
+    bitset<64> tofill(distr(eng));
     in.seekg(0, in.end);
 	int sum = in.tellg();
 	in.seekg(0, in.beg);
