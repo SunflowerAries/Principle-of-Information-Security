@@ -138,8 +138,6 @@ class RSA {
 
         RSA operator << (ull k) const {
             RSA res;
-            res.len = this->len;
-            res.flag = this->flag;
             if (k > 32) {
                 res = *this;
                 while (k > 0) {
@@ -153,8 +151,9 @@ class RSA {
                     if (res.value[res.len] != 0)
                         res.len++;
                 }
-            }
-            else {
+            } else {
+                res.len = this->len;
+                res.flag = this->flag;
                 for (int i = this->len - 1; i >= 0; i--) {
                         ull tmp;
                         tmp = this->value[i] << k;
@@ -225,7 +224,6 @@ class RSA {
                 return true;
             else if (!this->flag && rhs.flag)
                 return false;
-            
             if (this->len < rhs.len)
                 return true;
             else if (this->len > rhs.len)
@@ -326,6 +324,33 @@ class RSA {
             File.close();
         }
 
+        void write(const char *url, const RSA &n, const RSA &P, const RSA &Q) {
+            ofstream File(url, ios::out);
+            ull tmp[2] = {0};
+            ull temp[2] = {0};
+            ull p, q;
+            for (int i = 3; i >= 0; i--) {
+                temp[i / 2] <<= 32;
+                temp[i / 2] += n.value[i];
+            }
+            for (int i = this->len - 1; i >= 0; i--) {
+                tmp[i / 2] <<= 32;
+                tmp[i / 2] += this->value[i];
+            }
+            p = (P.value[1] << 32) + P.value[0];
+            q = (Q.value[1] << 32) + Q.value[0];
+            //cout << "P: " << P << ",Q: " << Q << endl;
+            //cout << "p: " << p << ",q: " << q << endl;
+            File.write((char *)&temp, sizeof(temp));
+            File.write((char*)&p, sizeof(p));
+            File.write((char*)&q, sizeof(q));
+            if (tmp[1] != 0)
+                File.write((char *)&tmp, sizeof(tmp));
+            else
+                File.write((char *)&tmp, sizeof(ull));
+            File.close();
+        }
+
         friend std::ostream& operator << (std::ostream &os, const RSA &r);
 };
 
@@ -345,4 +370,5 @@ void euclid(const RSA &phi, const RSA &e, RSA &d, RSA &y);
 void RSAGenerate();
 void read(const char *url, RSA *P);
 void read(const char *url, RSA *P, RSA *N);
+void read(const char *url, RSA *P, RSA *N, RSA *p, RSA *q);
 #endif

@@ -26,7 +26,7 @@ bool MillerRabin(ull n) {
                 break;
             else
                 b = RSA::Pow(b, RSA((ull)2), N);
-        if (tmpk == 0)
+        if (tmpk == 0 && !(b == N_1))
             return false;
         tmpk = k;
     }
@@ -71,7 +71,9 @@ void RSAGenerate() {
     ull e = 65537;
     ull p, q;
     RandomPrime(p, q, e);
-    RSA n = RSA(p) * RSA(q);
+    RSA P = RSA(p), Q = RSA(q);
+    //cout << "P: " << P << ",Q: " << Q << endl;
+    RSA n = P * Q;
     //cout << "n: " << n << endl;
     RSA phi = RSA(p - 1) * RSA(q - 1);
     //cout << "phi: " << phi << endl;
@@ -84,7 +86,7 @@ void RSAGenerate() {
     //cout << "d: " << d << endl;
     RSA E = RSA(e);
     E.write("public.txt", n);
-    d.write("private.txt", n);
+    d.write("private.txt", n, P, Q);
 }
 
 void read(const char *url, RSA *P, RSA *N) {
@@ -100,6 +102,26 @@ void read(const char *url, RSA *P, RSA *N) {
         File.read((char*)&k, sizeof(ull));
     *P = RSA::toRSA(k);
     *N = RSA::toRSA(n);
+}
+
+void read(const char *url, RSA *P, RSA *N, RSA *p, RSA *q) {
+    ull k[2], n[2], tmp, tmq;
+    ifstream File(url, ios::in);
+    File.seekg(0, File.end);
+    int sum = File.tellg();
+    File.seekg(0, File.beg);
+    File.read((char*)&n, sizeof(n));
+    File.read((char*)&tmp, sizeof(tmp));
+    File.read((char*)&tmq, sizeof(tmq));
+    //cout << "tmp: "  << tmp << ", tmq: " << tmq << endl;
+    if (sum == 48)
+        File.read((char*)&k, sizeof(k));
+    else
+        File.read((char*)&k, sizeof(ull));
+    *P = RSA::toRSA(k);
+    *N = RSA::toRSA(n);
+    *p = RSA(tmp);
+    *q = RSA(tmq);
 }
 
 void read(const char *url, RSA *P) {

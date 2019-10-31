@@ -204,6 +204,7 @@ int main() {
 	if (num == 0) {
 		cout << "Input the keys.\n";
 		cin >> Key;
+		//cout << RSA(Key.to_ullong()) << endl;
 		cout << "Input: 0 indicates directly encrypting with keys while 1 means working with public keys through RSA.\n";
 		cin >> choice;
 		if (choice == 1) {
@@ -221,10 +222,32 @@ int main() {
 			cin >> Key;
 		}
 		else {
-			RSA N, P, W;
-			read("private.txt", &P, &N);
+			RSA N, P, W, p, q;
+			read("private.txt", &P, &N, &p, &q);
 			read("Key.txt", &W);
-			RSA priv = RSA::Pow(W, P, N);
+			RSA c1, c2, d1, d2, m1, m2, y1, y2, tmp;
+			c1 = W % p;
+			c2 = W % q;
+			d1 = P % (p - RSA(1));
+			d2 = P % (q - RSA(1));
+			m1 = RSA::Pow(c1, d1, p);
+			m2 = RSA::Pow(c2, d2, q);
+			euclid(p, q, y1, tmp);
+			euclid(q, p, y2, tmp);
+			if (y1.flag == true) {
+				y1.flag == false;
+				y1 = p - y1;
+			}
+			if (y2.flag == true) {
+				y2.flag = false;
+				y2 = q - y2;
+			}
+			RSA priv = m1 * q * y1;
+			priv += m2 * p * y2;
+			priv = priv % N;
+			//cout << priv << endl;
+			//RSA apriv = RSA::Pow(W, P, N);
+			//cout << apriv << endl;
 			Key = RSA::toull(priv);
 		}
 	}
